@@ -1,0 +1,12 @@
+{
+  "name": "AfriResQ",
+  "short_name": "AfriResQ",
+  "description": "Community emergency coordination for African communities",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a1628",
+  "theme_color": "#0a1628",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

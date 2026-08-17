@@ -1,0 +1,26 @@
+services:
+  app:
+    build: .
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      # The server refuses to start in production with this placeholder —
+      # replace it with a real long random value before deploying.
+      JWT_SECRET: change-this-to-a-long-random-string
+      JWT_EXPIRES_IN: 15m
+      REFRESH_TOKEN_TTL_DAYS: 30
+      DATA_DIR: /data
+      # Optional real notification providers — see backend/.env.example.
+      # VAPID_PUBLIC_KEY: ""
+      # VAPID_PRIVATE_KEY: ""
+      # AT_USERNAME: ""
+      # AT_API_KEY: ""
+    volumes:
+      - afriresq-data:/data
+    command: >
+      sh -c "node src/db/seed.js && node src/server.js"
+
+volumes:
+  afriresq-data:
