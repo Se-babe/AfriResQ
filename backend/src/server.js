@@ -31,6 +31,7 @@ if (isDefaultSecret() && process.env.NODE_ENV === 'production') {
 }
 
 const app = express();
+app.set('trust proxy', 1);
 
 app.use(helmet({
   // The API also serves the built SPA (see frontendDist below); a default
@@ -148,7 +149,7 @@ process.on('unhandledRejection', (reason) => {
 // Only bind a port when run directly — importing `app` for tests (see
 // tests/api.test.js) must not also start listening.
 if (require.main === module) {
-  server.listen(PORT, () => {
+  server.listen(PORT, '0.0.0.0', () => {
     logger.info(`AfriResQ API listening on port ${PORT}`);
   });
 }
