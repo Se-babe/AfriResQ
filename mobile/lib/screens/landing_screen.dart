@@ -119,7 +119,7 @@ class _Hero extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     const Text(
-                      'Uganda’s digital emergency coordination infrastructure.\nFree for every Ugandan. Funded by Government.',
+                      'Uganda’s digital emergency coordination infrastructure.\nFree for every Ugandan.',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.white70, fontSize: 15, height: 1.4),
                     ),

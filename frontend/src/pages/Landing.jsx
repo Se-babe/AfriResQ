@@ -6,14 +6,14 @@ export function Landing() {
     <div>
       <section className="hero">
         <div>
-          <div className="kicker"><span className="pulse" /> Republic of Uganda · Digital public infrastructure</div>
+          <div className="kicker"><span className="pulse" /> Proposed · National digital infrastructure for Uganda</div>
           <h2>Uganda’s digital emergency coordination infrastructure.</h2>
           <p className="lede">
-            AfriResQ is built for the Government of Uganda — a national system that connects
+            AfriResQ is a national system, pitched to the Government of Uganda, that connects
             a person in distress to the nearest suitable responder, health facility, or
             community resource. Citizens, districts, hospitals, and organisations use it
-            at no charge. The Ministry of ICT and National Guidance funds and owns the platform
-            so every Ugandan can reach help faster.
+            at no charge, with the Ministry of ICT and National Guidance proposed to fund
+            and adopt the platform so every Ugandan can reach help faster.
           </p>
           <div className="actions">
             <Link className="btn primary" to="/report">Report an emergency</Link>
@@ -25,10 +25,10 @@ export function Landing() {
           </p>
         </div>
         <div className="hero-card">
-          <p className="tiny" style={{ color: '#c9d4df', letterSpacing: '0.12em', textTransform: 'uppercase' }}>National operating model</p>
-          <h3 style={{ fontSize: 32, margin: '8px 0 18px' }}>Government pays. Ugandans use it free.</h3>
+          <p className="tiny" style={{ color: '#c9d4df', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Proposed operating model</p>
+          <h3 style={{ fontSize: 32, margin: '8px 0 18px' }}>Proposed: Government pays. Ugandans use it free.</h3>
           <div className="stack">
-            <p><strong>Ministry of ICT</strong> procures, funds, and governs the national platform.</p>
+            <p><strong>Ministry of ICT</strong> would procure, fund, and govern the national platform.</p>
             <p><strong>Citizens</strong> report an emergency in a few taps — no fee, no subscription.</p>
             <p><strong>Responders and organisations</strong> (health facilities, Red Cross, local government, volunteers) access the system free of charge.</p>
             <p><strong>District coordinators</strong> see a live national picture: who needs help, who is going, and how long it took.</p>

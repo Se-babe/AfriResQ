@@ -4,7 +4,7 @@ Uganda’s digital emergency coordination infrastructure.
 
 Report → classify → match nearby verified responders → notify → resolve.
 
-AfriResQ is designed for the **Government of Uganda**. The **Ministry of ICT and National Guidance** is the intended contracting authority and paying customer. **Citizens, community responders, health facilities, NGOs, and local governments use the system at no charge.**
+AfriResQ is proposed as national digital infrastructure for the **Government of Uganda**, with the **Ministry of ICT and National Guidance** as the intended contracting authority and paying customer once adopted. **Citizens, community responders, health facilities, NGOs, and local governments would use the system at no charge.**
 
 It complements Uganda Police, fire brigade, ambulance, and hospitals. It does not replace them.
 
@@ -56,16 +56,16 @@ This runs both the unit tests (classification/geo/matching) and a supertest-driv
 
 AfriResQ does not replace police, fire, ambulance, or hospitals. It is a coordination layer beside them.
 
-## National model (Uganda)
+## Proposed national model (Uganda)
 
-| Party | Role |
+| Party | Role (pending government adoption) |
 |-------|------|
-| Ministry of ICT and National Guidance | Contracting authority. Pays for the national platform, data hosting, and operations. |
+| Ministry of ICT and National Guidance | Proposed contracting authority — would fund the national platform, data hosting, and operations. |
 | Citizens | Report emergencies free of charge. |
 | Responders, health facilities, NGOs, districts | Use matching, alerts, and dashboards free of charge. |
 | Uganda Police, fire, ambulance, hospitals | Remain the official responders; AfriResQ routes community reports to the nearest suitable help. |
 
-The product is positioned as **Uganda’s digital public infrastructure** for emergency coordination, starting in Kampala and expandable district by district.
+The product is pitched as **Uganda’s digital public infrastructure** for emergency coordination — currently a self-funded pilot starting in Kampala, built to scale nationwide if adopted.
 
 ## Real notification delivery
 
