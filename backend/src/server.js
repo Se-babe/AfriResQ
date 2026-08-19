@@ -151,6 +151,14 @@ process.on('unhandledRejection', (reason) => {
 if (require.main === module) {
   server.listen(PORT, '0.0.0.0', () => {
     logger.info(`AfriResQ API listening on port ${PORT}`);
+    try {
+      const users = db.prepare('SELECT COUNT(*) as c FROM users').get();
+      if (users.c === 0) {
+        require('./db/bootstrap-admin').bootstrapAdmin();
+      }
+    } catch (err) {
+      logger.error({ err }, 'admin bootstrap on boot failed');
+    }
   });
 }
 

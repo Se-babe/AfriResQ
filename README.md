@@ -94,12 +94,14 @@ This backend is a Node server with SQLite, so deploy it on **Render**, not Verce
    Or **New → Web Service**, connect the repo, and set:
    - **Root Directory:** `backend`
    - **Build:** `npm install`
-   - **Start:** `npm run seed && npm start`
+   - **Start:** `npm start`
    - **Environment:** `NODE_ENV=production` and a long random `JWT_SECRET`
-3. After deploy, the API URL looks like `https://afriresq-api.onrender.com`.
-4. In the Android app landing screen, set **API URL** to that origin (no `/api` suffix) and tap **Save API URL**.
+3. For a **real (non-demo) deployment**, set `ADMIN_NAME`, `ADMIN_PHONE`, `ADMIN_PASSWORD` (and optionally `ADMIN_EMAIL`) in the service's Environment tab before the first deploy, and run `npm run bootstrap` once (Render's `initialDeployHook` in `render.yaml` already does this) instead of `npm run seed` — this creates one real admin/coordinator login instead of the public demo accounts. Everyone else should register their own account from the app; responders need an admin/coordinator to verify them from the dashboard before they can be matched.
+   For real push notifications, also set `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` (generate with `npx web-push generate-vapid-keys` from `backend/`).
+4. After deploy, the API URL looks like `https://afriresq-api.onrender.com`.
+5. In the Android app landing screen, set **API URL** to that origin (no `/api` suffix) and tap **Save API URL**.
 
-Free Render instances sleep after idle time; the first request after sleep can take ~30s. Health check: `GET /api/health`.
+Free Render instances sleep after idle time; the first request after sleep can take ~30s. The free tier's disk is not guaranteed to persist across redeploys/restarts — for a real test where losing data matters, upgrade to a paid instance and attach a persistent disk. Health check: `GET /api/health`.
 
 ## Project layout
 

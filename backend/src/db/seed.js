@@ -22,6 +22,7 @@ function offsetKm(origin, northKm, eastKm) {
   };
 }
 
+function seed() {
 console.log('Seeding AfriResQ demo data...');
 
 // Organizations
@@ -104,3 +105,10 @@ console.log('  Admin:       +256700000001 / AdminPass123!');
 console.log('  Coordinator: +256700000002 / CoordPass123!');
 console.log('  Citizen:     +256700000099 / CitizenPass123!');
 console.log('  Responders:  +256700000010..15 / ResponderPass123!');
+}
+
+if (require.main === module) {
+  seed();
+}
+
+module.exports = { seed };

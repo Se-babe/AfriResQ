@@ -8,6 +8,7 @@
     "start": "node src/server.js",
     "dev": "node src/server.js",
     "seed": "node src/db/seed.js",
+    "bootstrap": "node src/db/bootstrap-admin.js",
     "test": "node --test tests/*.test.js"
   },
   "dependencies": {

@@ -7,7 +7,7 @@ services:
     rootDir: backend
     buildCommand: npm ci
     startCommand: npm start
-    initialDeployHook: npm run seed
+    initialDeployHook: npm run bootstrap
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
@@ -24,3 +24,21 @@ services:
         value: ./data
       - key: LOG_LEVEL
         value: info
+      # Set these in the Render dashboard (not committed to git) to create
+      # the first real admin/coordinator login instead of using demo seed data.
+      - key: ADMIN_NAME
+        sync: false
+      - key: ADMIN_PHONE
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      # Web Push (VAPID) — enables real push notifications for responders
+      # using the web console. Generate with: npx web-push generate-vapid-keys
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        sync: false
