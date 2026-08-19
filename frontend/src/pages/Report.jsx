@@ -111,7 +111,7 @@ export function Report() {
   return (
     <div>
       <div className="notice">
-        If you can reach official emergency services, call them as well. AfriResQ alerts nearby community responders and facilities.
+        If you can reach Uganda Police, fire, or ambulance, call them as well. AfriResQ is free for every Ugandan and alerts nearby verified responders and facilities.
       </div>
       <div className="split">
         <form className="card" onSubmit={submit}>

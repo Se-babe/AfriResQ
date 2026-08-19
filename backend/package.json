@@ -1,7 +1,7 @@
 {
   "name": "afriresq-backend",
   "version": "1.0.0",
-  "description": "AfriResQ - Intelligent Community Emergency Coordination Platform (API)",
+  "description": "AfriResQ Uganda - Digital Emergency Coordination Infrastructure (API)",
   "main": "src/server.js",
   "type": "commonjs",
   "scripts": {

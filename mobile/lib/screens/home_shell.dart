@@ -41,7 +41,7 @@ class _HomeShellState extends State<HomeShell> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AfriResQ'),
+        title: const Text('AfriResQ Uganda'),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8),

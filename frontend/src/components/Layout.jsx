@@ -9,9 +9,14 @@ export function Layout() {
   return (
     <div className="shell">
       <header className="topbar">
-        <NavLink to={user ? homeFor(role) : '/'} className="brand">
+        <div className="ug-stripe" aria-hidden="true" />
+        <div className="topbar-inner">
+          <NavLink to={user ? homeFor(role) : '/'} className="brand">
           <div className="brand-mark" aria-hidden="true"><span>✚</span></div>
-          <h1>Afri<em>Res</em>Q</h1>
+          <div>
+            <h1>Afri<em>Res</em>Q</h1>
+            <p className="brand-sub">Uganda</p>
+          </div>
         </NavLink>
         <nav className="nav">
           {!user && (
@@ -41,12 +46,14 @@ export function Layout() {
             </>
           )}
         </nav>
+        </div>
       </header>
       <main className={`page ${location.pathname === '/dashboard' ? 'wide' : ''}`}>
         <Outlet />
       </main>
       <footer className="footer">
-        AfriResQ coordinates community responders. It does not replace police, fire, ambulance, or hospital services.
+        AfriResQ is Uganda’s digital emergency coordination infrastructure. Free for citizens and organisations.
+        It does not replace police, fire, ambulance, or hospital services.
       </footer>
     </div>
   );

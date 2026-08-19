@@ -1,10 +1,14 @@
-# AfriResQ
+# AfriResQ Uganda
 
-Intelligent community emergency coordination for low-resource African communities.
+Uganda’s digital emergency coordination infrastructure.
 
 Report → classify → match nearby verified responders → notify → resolve.
 
-This is a working pilot: a Node.js API with SQLite, a React web app, and a Flutter Android app you can open in Android Studio.
+AfriResQ is designed for the **Government of Uganda**. The **Ministry of ICT and National Guidance** is the intended contracting authority and paying customer. **Citizens, community responders, health facilities, NGOs, and local governments use the system at no charge.**
+
+It complements Uganda Police, fire brigade, ambulance, and hospitals. It does not replace them.
+
+This repository is a working national-ready pilot: Node.js API, React web app, and Flutter Android app, starting from a Kampala district deployment and built to scale nationwide.
 
 ## Quick start
 
@@ -51,6 +55,17 @@ This runs both the unit tests (classification/geo/matching) and a supertest-driv
 - **PWA**: installable, with an app-shell cache for low connectivity.
 
 AfriResQ does not replace police, fire, ambulance, or hospitals. It is a coordination layer beside them.
+
+## National model (Uganda)
+
+| Party | Role |
+|-------|------|
+| Ministry of ICT and National Guidance | Contracting authority. Pays for the national platform, data hosting, and operations. |
+| Citizens | Report emergencies free of charge. |
+| Responders, health facilities, NGOs, districts | Use matching, alerts, and dashboards free of charge. |
+| Uganda Police, fire, ambulance, hospitals | Remain the official responders; AfriResQ routes community reports to the nearest suitable help. |
+
+The product is positioned as **Uganda’s digital public infrastructure** for emergency coordination, starting in Kampala and expandable district by district.
 
 ## Real notification delivery
 

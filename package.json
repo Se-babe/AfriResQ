@@ -1,7 +1,7 @@
 {
   "name": "afriresq",
   "private": true,
-  "description": "AfriResQ — intelligent community emergency coordination",
+  "description": "AfriResQ Uganda — digital emergency coordination infrastructure",
   "scripts": {
     "install:all": "npm install --prefix backend && npm install --prefix frontend",
     "seed": "npm run seed --prefix backend",

@@ -21,11 +21,11 @@ class LandingScreen extends StatelessWidget {
             flex: 4,
             child: SafeArea(
               top: false,
-              child: Padding(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(28, 28, 28, 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     FilledButton(
                       onPressed: () => Navigator.push(
@@ -56,7 +56,7 @@ class LandingScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     const Text(
-                      'Not a replacement for police, fire, ambulance, or hospitals.',
+                      'Free for citizens and organisations. Complements police, fire, ambulance, and hospitals.',
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 11.5, color: Color(0xFF8A7C68)),
                     ),
@@ -109,17 +109,17 @@ class _Hero extends StatelessWidget {
                     ),
                     const SizedBox(height: 18),
                     const Text(
-                      'AfriResQ',
+                      'AfriResQ Uganda',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 36,
+                        fontSize: 32,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.5,
                       ),
                     ),
                     const SizedBox(height: 10),
                     const Text(
-                      'Help, closer than the next phone call.',
+                      'Uganda’s digital emergency coordination infrastructure.\nFree for every Ugandan. Funded by Government.',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.white70, fontSize: 15, height: 1.4),
                     ),

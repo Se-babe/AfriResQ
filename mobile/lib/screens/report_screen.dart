@@ -138,7 +138,7 @@ class _ReportScreenState extends State<ReportScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        const Text('If you can reach official services, call them as well. AfriResQ alerts nearby community responders.'),
+        const Text('If you can reach Uganda Police, fire, or ambulance, call them as well. AfriResQ is free and alerts nearby verified responders.'),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,

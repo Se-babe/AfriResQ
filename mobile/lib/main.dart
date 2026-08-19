@@ -21,7 +21,7 @@ class AfriResQApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => AuthState(api)..bootstrap(),
       child: MaterialApp(
-        title: 'AfriResQ',
+        title: 'AfriResQ Uganda',
         debugShowCheckedModeBanner: false,
         theme: afriTheme(),
         home: const AuthGate(),
