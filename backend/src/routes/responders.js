@@ -2,6 +2,7 @@ const express = require('express');
 const { z } = require('zod');
 const db = require('../db/db');
 const { requireAuth, requireRole } = require('../middleware/auth');
+const { broadcastEvent } = require('../services/notification');
 
 const router = express.Router();
 
@@ -13,6 +14,9 @@ router.patch('/me/location', requireAuth, requireRole('responder'), (req, res) =
   db.prepare(
     `UPDATE responder_profiles SET current_lat = ?, current_lng = ?, last_location_at = datetime('now') WHERE user_id = ?`
   ).run(parsed.data.lat, parsed.data.lng, req.user.id);
+  // Lets a reporter's open case-detail screen (mobile/web) refetch and show
+  // live movement — cheap fan-out since clients just re-GET on any message.
+  broadcastEvent({ type: 'responder_location', responderId: req.user.id });
   res.json({ ok: true });
 });
 

@@ -52,7 +52,8 @@ const corsOrigins = (process.env.CORS_ORIGIN || '').split(',').map((s) => s.trim
 app.use(cors(corsOrigins.length > 0 ? { origin: corsOrigins } : {}));
 
 app.use(pinoHttp({ logger, autoLogging: { ignore: (req) => req.url === '/api/health' } }));
-app.use(express.json({ limit: '1mb' }));
+// 6mb accommodates a base64-encoded voice-note attachment (see routes/emergencies.js).
+app.use(express.json({ limit: '6mb' }));
 
 // Abuse protection: report submission and auth endpoints are the public,
 // unauthenticated attack surface. Dashboard GETs stay unrestricted.

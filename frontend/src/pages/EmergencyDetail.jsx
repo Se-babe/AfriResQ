@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { api } from '../api';
+import { api, wsUrl } from '../api';
 import { useAuth } from '../auth.jsx';
 import { categoryLabel, formatWhen } from '../constants';
 import { MapView } from '../components/MapView.jsx';
 import { SeverityBadge, StatusPill } from '../components/SeverityBadge.jsx';
+import { VoiceNotePlayer } from '../components/VoiceNotePlayer.jsx';
+import { RatingForm } from '../components/RatingForm.jsx';
 
 export function EmergencyDetail() {
   const { id } = useParams();
@@ -14,6 +16,7 @@ export function EmergencyDetail() {
   const [err, setErr] = useState('');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
+  const loadRef = useRef();
 
   const load = async () => {
     try {
@@ -22,8 +25,22 @@ export function EmergencyDetail() {
       setErr(e.message);
     }
   };
+  loadRef.current = load;
 
   useEffect(() => { load(); }, [id, token]);
+
+  // Live updates: responder location changes and status changes on this
+  // case both broadcast over the same WS the dashboard uses. Any message ->
+  // just refetch this case, same "dumb refresh" pattern as Dashboard.jsx.
+  useEffect(() => {
+    let ws;
+    try {
+      ws = new WebSocket(wsUrl());
+      ws.onmessage = () => loadRef.current();
+    } catch { /* live tracking is a nice-to-have; polling fallback below covers it */ }
+    const t = setInterval(() => loadRef.current(), 15000);
+    return () => { clearInterval(t); ws?.close(); };
+  }, [id]);
 
   if (err && !data) return <div className="alert err">{err}</div>;
   if (!data) return <p className="muted">Loading…</p>;
@@ -86,8 +103,28 @@ export function EmergencyDetail() {
               <input value={note} onChange={(ev) => setNote(ev.target.value)} placeholder="Arrival notes, handover, outcome…" />
             </label>
           )}
+          {data.assignedResponder?.distance_km != null && (
+            <p className="tiny" style={{ marginTop: 10 }}>
+              🚑 {data.assignedResponder.name} is <strong>{data.assignedResponder.distance_km} km</strong> away · ~
+              <strong>{data.assignedResponder.eta_minutes} min</strong>
+              {data.assignedResponder.last_location_at ? ` · updated ${formatWhen(data.assignedResponder.last_location_at)}` : ''}
+            </p>
+          )}
+          {e.hasVoiceNote && <VoiceNotePlayer emergencyId={id} token={token} />}
         </div>
-        <MapView emergencies={[e]} responders={[]} center={{ lat: e.lat, lng: e.lng }} />
+        <MapView
+          emergencies={[e]}
+          responders={data.assignedResponder?.current_lat != null ? [data.assignedResponder] : []}
+          center={{ lat: e.lat, lng: e.lng }}
+        />
+        {role === 'citizen' && e.reporter_id === user?.id && ['resolved', 'closed'].includes(e.status) && (
+          <RatingForm
+            emergencyId={id}
+            token={token}
+            existingRating={data.rating}
+            onRated={(rating) => setData((d) => ({ ...d, rating }))}
+          />
+        )}
       </div>
       <div className="stack">
         {data.matches && (

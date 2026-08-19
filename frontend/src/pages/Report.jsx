@@ -6,6 +6,7 @@ import { CATEGORIES, KAMPALA } from '../constants';
 import { enqueueReport, flushQueue, peekQueue } from '../offline';
 import { MapView } from '../components/MapView.jsx';
 import { SeverityBadge } from '../components/SeverityBadge.jsx';
+import { VoiceRecorder } from '../components/VoiceRecorder.jsx';
 
 export function Report() {
   const { token, user } = useAuth();
@@ -20,6 +21,7 @@ export function Report() {
   const [err, setErr] = useState('');
   const [queued, setQueued] = useState(peekQueue().length);
   const [result, setResult] = useState(null);
+  const [voiceNote, setVoiceNote] = useState(null);
 
   useEffect(() => {
     captureLocation();
@@ -76,6 +78,7 @@ export function Report() {
       locationAccuracyM: loc.accuracy,
       channel: 'web',
       reporterPhone: user ? undefined : phone,
+      voiceNote: voiceNote || undefined,
     };
     if (!user && !phone) {
       setErr('Enter a phone number so responders can reach you, or create an account.');
@@ -136,6 +139,7 @@ export function Report() {
           <label className="field"><span>Landmark / address</span>
             <input value={addressText} onChange={(e) => setAddressText(e.target.value)} placeholder="Near Mulago roundabout, opposite the market" />
           </label>
+          <VoiceRecorder onChange={setVoiceNote} />
           <div className="cluster" style={{ marginTop: 14 }}>
             <button type="button" className="btn ghost" onClick={captureLocation} disabled={locating}>
               {locating ? 'Finding you…' : location ? `Location captured (±${Math.round(location.accuracy || 0)} m)` : 'Use my location'}

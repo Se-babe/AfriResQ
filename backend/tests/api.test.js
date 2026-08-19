@@ -189,3 +189,84 @@ test('unauthenticated requests to protected routes are rejected', async () => {
   const res = await request(app).get('/api/emergencies');
   assert.strictEqual(res.status, 401);
 });
+
+test('voice note attach + retrieve, live responder distance/ETA, and post-resolve rating', async () => {
+  const citizen = makeUser({ name: 'Voice Reporter', phone: '+256711000040', role: 'citizen' });
+  const citizenToken = signToken(citizen);
+
+  const responder = makeUser({ name: 'Tracked Medic', phone: '+256711000041', role: 'responder' });
+  db.prepare(
+    `INSERT INTO responder_profiles (user_id, skills, verification_status, availability_status, current_lat, current_lng)
+     VALUES (?, ?, 'verified', 'available', ?, ?)`
+  ).run(responder.id, JSON.stringify(['medical']), 0.35, 32.59); // ~3km from the report
+  const responderToken = signToken(responder);
+
+  const audioBase64 = Buffer.from('fake-audio-bytes').toString('base64');
+  const report = await request(app)
+    .post('/api/emergencies')
+    .set('Authorization', `Bearer ${citizenToken}`)
+    .send({
+      category: 'medical',
+      lat: 0.3476,
+      lng: 32.5825,
+      voiceNote: { audioBase64, mimeType: 'audio/m4a', durationSeconds: 12 },
+    });
+  assert.strictEqual(report.status, 201);
+  const emergencyId = report.body.emergency.id;
+
+  const detailAfterReport = await request(app)
+    .get(`/api/emergencies/${emergencyId}`)
+    .set('Authorization', `Bearer ${citizenToken}`);
+  assert.strictEqual(detailAfterReport.body.emergency.hasVoiceNote, true);
+
+  const voiceNote = await request(app)
+    .get(`/api/emergencies/${emergencyId}/voice-note`)
+    .set('Authorization', `Bearer ${citizenToken}`);
+  assert.strictEqual(voiceNote.status, 200);
+  assert.strictEqual(voiceNote.body.audioBase64, audioBase64);
+  assert.strictEqual(voiceNote.body.mimeType, 'audio/m4a');
+
+  await request(app).post(`/api/emergencies/${emergencyId}/accept`).set('Authorization', `Bearer ${responderToken}`);
+
+  const detailAfterAccept = await request(app)
+    .get(`/api/emergencies/${emergencyId}`)
+    .set('Authorization', `Bearer ${citizenToken}`);
+  assert.ok(detailAfterAccept.body.assignedResponder.distance_km > 0);
+  assert.ok(detailAfterAccept.body.assignedResponder.eta_minutes >= 1);
+
+  // Responder moves closer; broadcast happens but we only assert the polled state here.
+  await request(app)
+    .patch('/api/responders/me/location')
+    .set('Authorization', `Bearer ${responderToken}`)
+    .send({ lat: 0.348, lng: 32.583 });
+  const detailAfterMove = await request(app)
+    .get(`/api/emergencies/${emergencyId}`)
+    .set('Authorization', `Bearer ${citizenToken}`);
+  assert.ok(detailAfterMove.body.assignedResponder.distance_km < detailAfterAccept.body.assignedResponder.distance_km);
+
+  // Rating is rejected before resolution.
+  const tooEarly = await request(app)
+    .post(`/api/emergencies/${emergencyId}/rating`)
+    .set('Authorization', `Bearer ${citizenToken}`)
+    .send({ stars: 5 });
+  assert.strictEqual(tooEarly.status, 409);
+
+  await request(app).post(`/api/emergencies/${emergencyId}/status`).set('Authorization', `Bearer ${responderToken}`).send({ status: 'in_progress' });
+  await request(app).post(`/api/emergencies/${emergencyId}/status`).set('Authorization', `Bearer ${responderToken}`).send({ status: 'resolved' });
+
+  const rating = await request(app)
+    .post(`/api/emergencies/${emergencyId}/rating`)
+    .set('Authorization', `Bearer ${citizenToken}`)
+    .send({ stars: 4, comment: 'Quick response' });
+  assert.strictEqual(rating.status, 201);
+
+  const duplicateRating = await request(app)
+    .post(`/api/emergencies/${emergencyId}/rating`)
+    .set('Authorization', `Bearer ${citizenToken}`)
+    .send({ stars: 3 });
+  assert.strictEqual(duplicateRating.status, 409);
+
+  const profile = db.prepare('SELECT rating_avg, rating_count FROM responder_profiles WHERE user_id = ?').get(responder.id);
+  assert.strictEqual(profile.rating_count, 1);
+  assert.strictEqual(profile.rating_avg, 4);
+});

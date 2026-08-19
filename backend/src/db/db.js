@@ -138,6 +138,33 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user ON push_subscriptions(user_id);
+
+-- Voice-note (and future photo/etc) attachments on a report. Stored as a
+-- BLOB in SQLite rather than on disk so a single file/backup covers both —
+-- the pilot's ephemeral hosting disk already makes on-disk files unreliable.
+CREATE TABLE IF NOT EXISTS emergency_attachments (
+  id TEXT PRIMARY KEY,
+  emergency_id TEXT NOT NULL REFERENCES emergencies(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL CHECK(kind IN ('voice_note')),
+  mime_type TEXT NOT NULL,
+  data BLOB NOT NULL,
+  duration_seconds REAL,
+  uploaded_by TEXT REFERENCES users(id),
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_attachments_emergency ON emergency_attachments(emergency_id);
+
+-- One rating per resolved emergency, given by the reporter. Feeds
+-- responder_profiles.rating_avg / rating_count.
+CREATE TABLE IF NOT EXISTS emergency_ratings (
+  id TEXT PRIMARY KEY,
+  emergency_id TEXT NOT NULL UNIQUE REFERENCES emergencies(id) ON DELETE CASCADE,
+  responder_id TEXT NOT NULL REFERENCES users(id),
+  reporter_id TEXT NOT NULL REFERENCES users(id),
+  stars INTEGER NOT NULL CHECK(stars BETWEEN 1 AND 5),
+  comment TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 `;
 
 db.exec(SCHEMA);

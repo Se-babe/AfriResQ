@@ -1,15 +1,17 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 
 import '../api.dart';
 import '../auth_state.dart';
 import '../constants.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
+import '../widgets/voice_note_recorder.dart';
 import 'emergency_detail_screen.dart';
 
 class ReportScreen extends StatefulWidget {
@@ -29,6 +31,7 @@ class _ReportScreenState extends State<ReportScreen> {
   bool locating = false;
   bool busy = false;
   Map<String, dynamic>? result;
+  Map<String, dynamic>? voiceNote;
 
   @override
   void initState() {
@@ -105,6 +108,7 @@ class _ReportScreenState extends State<ReportScreen> {
       'locationAccuracyM': position?.accuracy,
       'channel': 'app',
       if (widget.anonymous || !auth.signedIn) 'reporterPhone': phone.text.trim(),
+      if (voiceNote != null) 'voiceNote': voiceNote,
     };
     if ((widget.anonymous || !auth.signedIn) && phone.text.trim().isEmpty) {
       showError(context, 'Enter a phone number so responders can reach you.');
@@ -162,6 +166,8 @@ class _ReportScreenState extends State<ReportScreen> {
         ],
         const SizedBox(height: 12),
         TextField(controller: address, decoration: const InputDecoration(labelText: 'Landmark / address')),
+        const SizedBox(height: 12),
+        VoiceNoteRecorder(onChange: (v) => setState(() => voiceNote = v)),
         const SizedBox(height: 12),
         OutlinedButton.icon(onPressed: locating ? null : _locate, icon: const Icon(Icons.my_location), label: Text(locLabel)),
         const SizedBox(height: 12),

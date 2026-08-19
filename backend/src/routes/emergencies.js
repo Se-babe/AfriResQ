@@ -7,6 +7,16 @@ const { classify } = require('../services/classification');
 const { runMatching } = require('../services/matching');
 const { notifyUser, broadcastEvent } = require('../services/notification');
 const { logEvent } = require('../services/events');
+const { haversineKm } = require('../services/geo');
+
+// Rough average travel speed used to turn a distance into an ETA for the
+// reporter's "responder is N min away" indicator — not routed/traffic-aware,
+// just a friendly estimate for boda-boda/car mixed urban traffic.
+const ASSUMED_RESPONDER_SPEED_KMH = 25;
+
+// Encoded (base64) size limit for a voice-note attachment. ~2MB decoded is
+// generous for a <=60s recording at typical mobile codec bitrates.
+const MAX_VOICE_NOTE_BASE64_CHARS = 2_800_000;
 
 const router = express.Router();
 
@@ -37,6 +47,13 @@ const reportSchema = z.object({
   locationAccuracyM: z.number().optional(),
   channel: z.enum(['app', 'ussd', 'sms', 'web']).default('app'),
   reporterPhone: z.string().optional(), // used when reporting anonymously / via USSD
+  voiceNote: z
+    .object({
+      audioBase64: z.string().max(MAX_VOICE_NOTE_BASE64_CHARS, 'Voice note is too large'),
+      mimeType: z.string(),
+      durationSeconds: z.number().optional(),
+    })
+    .optional(),
 });
 
 /**
@@ -73,6 +90,21 @@ router.post('/', optionalAuth, async (req, res, next) => {
     data.channel
   );
   logEvent(id, 'reported', req.user ? req.user.id : null, { category: data.category, channel: data.channel });
+
+  if (data.voiceNote) {
+    db.prepare(
+      `INSERT INTO emergency_attachments (id, emergency_id, kind, mime_type, data, duration_seconds, uploaded_by)
+       VALUES (?, ?, 'voice_note', ?, ?, ?, ?)`
+    ).run(
+      uuidv4(),
+      id,
+      data.voiceNote.mimeType,
+      Buffer.from(data.voiceNote.audioBase64, 'base64'),
+      data.voiceNote.durationSeconds || null,
+      req.user ? req.user.id : null
+    );
+    logEvent(id, 'voice_note_attached', req.user ? req.user.id : null, {});
+  }
 
   // 1. Classify
   const result = classify({ category: data.category, description: data.description });
@@ -202,16 +234,108 @@ router.get('/:id', requireAuth, (req, res) => {
       `SELECT m.*, u.name, u.phone FROM matches m JOIN users u ON u.id = m.responder_id WHERE emergency_id = ? ORDER BY rank ASC`
     )
     .all(req.params.id);
-  const assigned = emergency.assigned_responder_id
+  let assigned = emergency.assigned_responder_id
     ? db.prepare('SELECT id, name, phone FROM users WHERE id = ?').get(emergency.assigned_responder_id)
     : null;
 
+  // Live location + a rough ETA for the reporter's "responder is N min away"
+  // view. Only shared with people who are already allowed to see this case's
+  // sensitive detail (owner/assigned responder/coordinator), not candidates.
+  if (assigned && (isOwner || isAssigned || isPrivileged)) {
+    const profile = db
+      .prepare('SELECT current_lat, current_lng, last_location_at FROM responder_profiles WHERE user_id = ?')
+      .get(assigned.id);
+    if (profile?.current_lat != null && profile?.current_lng != null) {
+      const distanceKm = haversineKm(emergency.lat, emergency.lng, profile.current_lat, profile.current_lng);
+      assigned = {
+        ...assigned,
+        current_lat: profile.current_lat,
+        current_lng: profile.current_lng,
+        last_location_at: profile.last_location_at,
+        distance_km: Math.round(distanceKm * 10) / 10,
+        eta_minutes: Math.max(1, Math.round((distanceKm / ASSUMED_RESPONDER_SPEED_KMH) * 60)),
+      };
+    }
+  }
+
+  const hasVoiceNote = !!db
+    .prepare(`SELECT 1 FROM emergency_attachments WHERE emergency_id = ? AND kind = 'voice_note'`)
+    .get(req.params.id);
+  const rating = db
+    .prepare('SELECT stars, comment, created_at FROM emergency_ratings WHERE emergency_id = ?')
+    .get(req.params.id);
+
   res.json({
-    emergency: { ...emergency, assigned_responder_name: assigned?.name || null },
+    emergency: { ...emergency, assigned_responder_name: assigned?.name || null, hasVoiceNote },
     events,
     matches: isPrivileged || isOwner ? matches : isCandidate ? matches.filter((m) => m.responder_id === req.user.id) : undefined,
     assignedResponder: assigned,
+    rating: rating || null,
   });
+});
+
+// Streams the voice-note attachment (if any) as base64 JSON, keeping the
+// whole API JSON-only rather than adding a separate binary/multipart path.
+router.get('/:id/voice-note', requireAuth, (req, res) => {
+  const emergency = db.prepare('SELECT * FROM emergencies WHERE id = ?').get(req.params.id);
+  if (!emergency) return res.status(404).json({ error: 'Emergency not found' });
+
+  const isOwner = emergency.reporter_id === req.user.id;
+  const isAssigned = emergency.assigned_responder_id === req.user.id;
+  const isPrivileged = ['coordinator', 'admin'].includes(req.user.role);
+  const isCandidate = !!db
+    .prepare('SELECT 1 FROM matches WHERE emergency_id = ? AND responder_id = ?')
+    .get(req.params.id, req.user.id);
+  if (!isOwner && !isAssigned && !isPrivileged && !isCandidate) {
+    return res.status(403).json({ error: 'Not authorized to view this emergency' });
+  }
+
+  const attachment = db
+    .prepare(`SELECT mime_type, data, duration_seconds FROM emergency_attachments WHERE emergency_id = ? AND kind = 'voice_note'`)
+    .get(req.params.id);
+  if (!attachment) return res.status(404).json({ error: 'No voice note on this report' });
+
+  res.json({
+    mimeType: attachment.mime_type,
+    audioBase64: attachment.data.toString('base64'),
+    durationSeconds: attachment.duration_seconds,
+  });
+});
+
+const ratingSchema = z.object({ stars: z.number().int().min(1).max(5), comment: z.string().max(500).optional() });
+
+// Reporter rates the responder once, after the case is resolved/closed.
+router.post('/:id/rating', requireAuth, (req, res) => {
+  const parsed = ratingSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+
+  const emergency = db.prepare('SELECT * FROM emergencies WHERE id = ?').get(req.params.id);
+  if (!emergency) return res.status(404).json({ error: 'Emergency not found' });
+  if (emergency.reporter_id !== req.user.id) return res.status(403).json({ error: 'Only the reporter can rate this case' });
+  if (!['resolved', 'closed'].includes(emergency.status)) {
+    return res.status(409).json({ error: 'This case has not been resolved yet' });
+  }
+  if (!emergency.assigned_responder_id) return res.status(409).json({ error: 'No responder was assigned to this case' });
+
+  const existing = db.prepare('SELECT id FROM emergency_ratings WHERE emergency_id = ?').get(req.params.id);
+  if (existing) return res.status(409).json({ error: 'You already rated this case' });
+
+  const { stars, comment } = parsed.data;
+  const tx = db.transaction(() => {
+    db.prepare(
+      `INSERT INTO emergency_ratings (id, emergency_id, responder_id, reporter_id, stars, comment)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    ).run(uuidv4(), req.params.id, emergency.assigned_responder_id, req.user.id, stars, comment || null);
+    db.prepare(
+      `UPDATE responder_profiles
+       SET rating_avg = ((rating_avg * rating_count) + ?) / (rating_count + 1), rating_count = rating_count + 1
+       WHERE user_id = ?`
+    ).run(stars, emergency.assigned_responder_id);
+  });
+  tx();
+
+  logEvent(req.params.id, 'rated', req.user.id, { stars });
+  res.status(201).json({ ok: true, rating: { stars, comment: comment || null } });
 });
 
 // Coordinator re-runs matching if nobody accepted or no candidates were found.
