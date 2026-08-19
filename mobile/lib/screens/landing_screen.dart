@@ -33,7 +33,7 @@ class _LandingScreenState extends State<LandingScreen> {
   Future<void> _saveApiUrl() async {
     try {
       await context.read<AuthState>().api.setBaseUrl(_api.text.trim());
-      if (context.mounted) {
+      if (mounted) {
         setState(() {});
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('API URL saved')));
       }

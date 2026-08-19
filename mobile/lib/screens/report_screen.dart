@@ -34,6 +34,7 @@ class _ReportScreenState extends State<ReportScreen> {
   void initState() {
     super.initState();
     _locate();
+    _flushQueue();
   }
 
   @override
@@ -68,6 +69,29 @@ class _ReportScreenState extends State<ReportScreen> {
     final list = jsonDecode(prefs.getString('offline_queue') ?? '[]') as List;
     list.add(payload);
     await prefs.setString('offline_queue', jsonEncode(list));
+  }
+
+  Future<void> _flushQueue() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = jsonDecode(prefs.getString('offline_queue') ?? '[]') as List;
+    if (list.isEmpty || !mounted) return;
+    final api = context.read<AuthState>().api;
+    final remaining = <dynamic>[];
+    var sent = 0;
+    for (final item in list) {
+      try {
+        await api.request('/emergencies', method: 'POST', body: Map<String, dynamic>.from(item as Map));
+        sent++;
+      } on ApiException {
+        remaining.add(item);
+      }
+    }
+    await prefs.setString('offline_queue', jsonEncode(remaining));
+    if (sent > 0 && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$sent saved report(s) from earlier were just sent.')),
+      );
+    }
   }
 
   Future<void> _submit() async {
