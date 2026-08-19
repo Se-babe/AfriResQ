@@ -18,7 +18,7 @@ class AfriApi {
   static const _userKey = 'afriresq_user';
   static const _baseKey = 'afriresq_api_base';
 
-  String baseUrl = '';
+  String baseUrl = 'https://afriresq-api.onrender.com';
   String? token;
   String? refreshToken;
   Map<String, dynamic>? user;

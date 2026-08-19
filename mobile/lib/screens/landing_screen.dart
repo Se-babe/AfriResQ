@@ -1,101 +1,139 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-import '../api.dart';
-import '../auth_state.dart';
 import '../theme.dart';
-import '../widgets/common.dart';
 import 'login_screen.dart';
 import 'register_screen.dart';
 
-class LandingScreen extends StatefulWidget {
+class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});
 
   @override
-  State<LandingScreen> createState() => _LandingScreenState();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: sand,
+      body: Column(
+        children: [
+          const Expanded(
+            flex: 5,
+            child: _Hero(),
+          ),
+          Expanded(
+            flex: 4,
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(28, 28, 28, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    FilledButton(
+                      onPressed: () => Navigator.push(
+                          context, MaterialPageRoute(builder: (_) => const LoginScreen(guestReport: true))),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(56),
+                        textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: const Text('Report an emergency'),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton(
+                      onPressed: () =>
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen())),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(56),
+                        side: const BorderSide(color: ink, width: 1.4),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: const Text('Sign in', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: ink)),
+                    ),
+                    const SizedBox(height: 16),
+                    TextButton(
+                      onPressed: () =>
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen())),
+                      child: const Text('Create an account · join as a responder'),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Not a replacement for police, fire, ambulance, or hospitals.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 11.5, color: Color(0xFF8A7C68)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _LandingScreenState extends State<LandingScreen> {
-  late final TextEditingController _api;
-
-  @override
-  void initState() {
-    super.initState();
-    _api = TextEditingController(text: context.read<AuthState>().api.baseUrl);
-  }
-
-  @override
-  void dispose() {
-    _api.dispose();
-    super.dispose();
-  }
-
-  Future<void> _saveApiUrl() async {
-    try {
-      await context.read<AuthState>().api.setBaseUrl(_api.text.trim());
-      if (mounted) {
-        setState(() {});
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('API URL saved')));
-      }
-    } on ApiException catch (e) {
-      if (mounted) showError(context, e);
-    }
-  }
+class _Hero extends StatelessWidget {
+  const _Hero();
 
   @override
   Widget build(BuildContext context) {
-    final ready = context.watch<AuthState>().api.baseUrl.isNotEmpty;
-    return Scaffold(
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(22),
-          children: [
-            const SizedBox(height: 12),
-            Text('AfriResQ', style: Theme.of(context).textTheme.displaySmall?.copyWith(color: ink, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 8),
-            const Text('Help is closer than the next phone call.', style: TextStyle(fontSize: 22, height: 1.2)),
-            const SizedBox(height: 12),
-            const Text(
-              'Report once. Nearby verified responders are classified, matched, and notified.',
-              style: TextStyle(color: Color(0xFF6B5E4E), height: 1.4),
-            ),
-            const SizedBox(height: 24),
-            const Text('API server', style: TextStyle(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 6),
-            TextField(
-              controller: _api,
-              keyboardType: TextInputType.url,
-              decoration: const InputDecoration(
-                hintText: 'https://your-afriresq-api.onrender.com',
-                helperText: 'Required before you can sign in or report. Must be an https:// address.',
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: ink,
+        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(36), bottomRight: Radius.circular(36)),
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            right: -40,
+            top: -40,
+            child: _ringDot(140, terracotta.withValues(alpha: 0.14)),
+          ),
+          Positioned(
+            left: -30,
+            bottom: 20,
+            child: _ringDot(90, amber.withValues(alpha: 0.10)),
+          ),
+          SafeArea(
+            bottom: false,
+            child: Align(
+              alignment: const Alignment(0, 0.05),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.asset('assets/icon/icon.png', width: 72, height: 72),
+                    ),
+                    const SizedBox(height: 18),
+                    const Text(
+                      'AfriResQ',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 36,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Help, closer than the next phone call.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white70, fontSize: 15, height: 1.4),
+                    ),
+                  ],
+                ),
               ),
             ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton(onPressed: _saveApiUrl, child: const Text('Save API URL')),
-            ),
-            const SizedBox(height: 18),
-            FilledButton(
-              onPressed: !ready
-                  ? null
-                  : () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen(guestReport: true))),
-              child: const Text('Report an emergency'),
-            ),
-            const SizedBox(height: 10),
-            OutlinedButton(
-              onPressed: !ready ? null : () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen())),
-              child: const Text('Sign in'),
-            ),
-            const SizedBox(height: 10),
-            TextButton(
-              onPressed: !ready ? null : () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen())),
-              child: const Text('Create an account / join as responder'),
-            ),
-            const SizedBox(height: 8),
-            const Text('This does not replace police, fire, ambulance, or hospitals.', style: TextStyle(fontSize: 12, color: Color(0xFF6B5E4E))),
-          ],
-        ),
+          ),
+        ],
       ),
     );
+  }
+
+  Widget _ringDot(double size, Color color) {
+    return Container(width: size, height: size, decoration: BoxDecoration(color: color, shape: BoxShape.circle));
   }
 }
